@@ -1,0 +1,25 @@
+# /bin/bash
+
+# Converts a .mov file into a .gif
+# Usage: mov-to-gif /path/to/movie.mov
+
+TEMPDIR=`mktemp -d -t gif`
+FILE="$1"
+NEWPATH=$(echo $FILE | rev | cut -f 2- -d '.' | rev).gif
+
+if ! [[ $(file $FILE) == *"Apple QuickTime movie"* ]]; then
+  echo "Invalid path to .mov"
+  exit 1
+fi
+
+ffmpeg -loglevel panic -i $FILE $TEMPDIR/%3d.png
+
+DURATION=$(ffprobe -i $FILE -show_entries format=duration -v quiet -of csv="p=0")
+FRAMECOUNT=$(ls $TEMPDIR | wc -l)
+DELAY=$(bc -l <<< "1/($DURATION/$FRAMECOUNT)")
+
+convert -delay $DELAY -loop 0 $TEMPDIR/*.png $NEWPATH
+
+echo "Created $NEWPATH"
+
+trap "rm -r $TEMPDIR" EXIT
