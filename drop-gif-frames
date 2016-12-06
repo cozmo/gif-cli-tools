@@ -1,0 +1,13 @@
+#!/bin/bash
+set -eu
+
+# This script will take an animated GIF and delete every Nth frame
+# Usage: drop-gif-frames input.gif output.gif N
+# (where N 2 for "every other frame", "3 for every third frame" etc)
+
+old_numframes=`gifsicle $1 -I | head -n1 | cut -d" " -f3`
+old_speed=`gifsicle -I $1 | grep delay | head -n1 | cut -d" " -f 8 | sed 's/.$//'`
+new_num_frames=$(seq -f "#%g" 0 $old_numframes | awk "{nr++; if (nr % $3 != 0) print \$0}" | wc -l)
+new_speed=$(echo "$old_speed * 100*($old_numframes/$new_num_frames)" | bc -l)
+int_speed=$(echo "($new_speed)/1" | bc)
+gifsicle -U "$1" -d$int_speed -O1 $(seq -f "#%g" 0 $old_numframes | awk "{nr++; if (nr % $3 != 0) print \$0}") -o "$2"
