@@ -16,7 +16,7 @@ ffmpeg -loglevel panic -i $FILE $TEMPDIR/%3d.png
 
 DURATION=$(ffprobe -i $FILE -show_entries format=duration -v quiet -of csv="p=0")
 FRAMECOUNT=$(ls $TEMPDIR | wc -l)
-DELAY=$(bc -l <<< "1/($DURATION/$FRAMECOUNT)")
+DELAY=$(bc -l <<< "$DURATION/$FRAMECOUNT")
 
 convert -delay $DELAY -loop 0 $TEMPDIR/*.png $NEWPATH
 
